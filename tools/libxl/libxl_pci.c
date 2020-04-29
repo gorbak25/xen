@@ -2444,12 +2444,14 @@ void libxl__device_pci_destroy_all(libxl__egc *egc, uint32_t domid,
 static int libxl__grant_legacy_vga_permissions(libxl__gc *gc, const uint32_t domid) {
     int ret, i;
     uint64_t vga_iomem_start = 0xa0000 >> XC_PAGE_SHIFT;
-    uint64_t vga_iomem_npages = 0x40; // vga ram + vbios
+    uint64_t vga_iomem_npages = 0x20; // vga ram + vbios
+    uint64_t vga_vbios_start = 0xc0000 >> XC_PAGE_SHIFT;
+    uint64_t vga_vbios_npages = 0x20;
     uint32_t stubdom_domid = libxl_get_stubdom_id(CTX, domid);
     uint64_t vga_ioport_start[] = {0x3B0, 0x3C0};
     uint64_t vga_ioport_size[] = {0xC, 0x20};
 
-    // VGA RAM + VBIOS
+    // VGA RAM
     ret = xc_domain_iomem_permission(CTX->xch, stubdom_domid,
                                      vga_iomem_start, vga_iomem_npages, 1);
     if (ret < 0) {
@@ -2467,6 +2469,13 @@ static int libxl__grant_legacy_vga_permissions(libxl__gc *gc, const uint32_t dom
               "failed to give dom%d access to iomem range "
               "%"PRIx64"-%"PRIx64" for VGA passthru",
               domid, vga_iomem_start, (vga_iomem_start + (vga_iomem_npages << XC_PAGE_SHIFT) - 1));
+        return ret;
+    }
+
+    // VGA ROM
+    ret = xc_domain_memory_mapping(CTX->xch, stubdom_domid, vga_vbios_start, vga_vbios_start, vga_vbios_npages, DPCI_ADD_MAPPING);
+    if (ret < 0) {
+        LOGED(ERROR, domid, "failed to map VBIOS to stubdom%d", stubdom_domid);
         return ret;
     }
 
