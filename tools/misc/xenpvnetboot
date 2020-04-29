@@ -192,7 +192,7 @@ Supported locations:
                       help='Arguments pass to the kernel.')
     parser.add_option('', '--output',
                       help='Redirect output to this file instead of stdout.')
-    parser.add_option('', '--output-directory', default='/var/run/libxl',
+    parser.add_option('', '--output-directory', default='/run/libxl',
                       help='Output directory.')
     parser.add_option('', '--output-format', default='sxp',
                       help='Output format: sxp, simple or simple0.')

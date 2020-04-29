@@ -648,7 +648,7 @@ static void parse_args(int argc, char **argv)
     }
 }
 
-#define SHARED_MEM_FILE "/var/run/xenq-shm"
+#define SHARED_MEM_FILE "/run/xenq-shm"
 static void alloc_qos_data(int ncpu)
 {
     int i, n, pgsize, off=0;
