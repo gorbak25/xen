@@ -19,7 +19,7 @@
 # Serialisation
 #
 
-LOCK_BASEDIR=/var/run/xen-hotplug
+LOCK_BASEDIR=/run/xen-hotplug
 
 _setlockfd()
 {

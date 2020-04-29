@@ -803,7 +803,7 @@ if __name__ == "__main__":
     debug = False
     not_really = False
     output_format = "sxp"
-    output_directory = "/var/run/xen/pygrub"
+    output_directory = "/run/xen/pygrub"
 
     # what was passed in
     incfg = { "kernel": None, "ramdisk": None, "args": "" }
