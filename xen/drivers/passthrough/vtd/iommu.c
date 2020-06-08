@@ -2544,6 +2544,7 @@ static int __must_check vtd_suspend(void)
     struct vtd_iommu *iommu;
     u32    i;
     int rc;
+    unsigned long flags;
 
     if ( !iommu_enabled )
         return 0;
@@ -2562,15 +2563,6 @@ static int __must_check vtd_suspend(void)
         iommu = drhd->iommu;
         i = iommu->index;
 
-        iommu_state[i][DMAR_FECTL_REG] =
-            (u32) dmar_readl(iommu->reg, DMAR_FECTL_REG);
-        iommu_state[i][DMAR_FEDATA_REG] =
-            (u32) dmar_readl(iommu->reg, DMAR_FEDATA_REG);
-        iommu_state[i][DMAR_FEADDR_REG] =
-            (u32) dmar_readl(iommu->reg, DMAR_FEADDR_REG);
-        iommu_state[i][DMAR_FEUADDR_REG] =
-            (u32) dmar_readl(iommu->reg, DMAR_FEUADDR_REG);
-
         /* don't disable VT-d engine when force_iommu is set. */
         if ( force_iommu )
             continue;
@@ -2583,6 +2575,17 @@ static int __must_check vtd_suspend(void)
          */
         if ( !iommu_intremap && iommu_qinval )
             disable_qinval(iommu);
+	
+        spin_lock_irqsave(&iommu->register_lock, flags);
+        iommu_state[i][DMAR_FECTL_REG] =
+            (u32) dmar_readl(iommu->reg, DMAR_FECTL_REG);
+        iommu_state[i][DMAR_FEDATA_REG] =
+            (u32) dmar_readl(iommu->reg, DMAR_FEDATA_REG);
+        iommu_state[i][DMAR_FEADDR_REG] =
+            (u32) dmar_readl(iommu->reg, DMAR_FEADDR_REG);
+        iommu_state[i][DMAR_FEUADDR_REG] =
+            (u32) dmar_readl(iommu->reg, DMAR_FEUADDR_REG);
+        spin_unlock_irqrestore(&iommu->register_lock, flags);
     }
 
     return 0;
@@ -2627,6 +2630,8 @@ static void vtd_resume(void)
         iommu = drhd->iommu;
         i = iommu->index;
 
+        iommu_enable_translation(drhd);
+
         spin_lock_irqsave(&iommu->register_lock, flags);
         dmar_writel(iommu->reg, DMAR_FECTL_REG,
                     (u32) iommu_state[i][DMAR_FECTL_REG]);
@@ -2637,8 +2642,6 @@ static void vtd_resume(void)
         dmar_writel(iommu->reg, DMAR_FEUADDR_REG,
                     (u32) iommu_state[i][DMAR_FEUADDR_REG]);
         spin_unlock_irqrestore(&iommu->register_lock, flags);
-
-        iommu_enable_translation(drhd);
     }
 }
 
